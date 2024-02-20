@@ -154,15 +154,15 @@ public class Parser {
                 break;
             case MINUS:
             case NOT:
-            expectPeek(MINUS, NOT);
-            var op = currentToken.type;
-            parseTerm();
-            if (op == MINUS)
-                vmWriter.writeArithmetic(Command.NEG);
-            else
-                vmWriter.writeArithmetic(Command.NOT);
+                expectPeek(MINUS, NOT);
+                var op = currentToken.type;
+                parseTerm();
+                if (op == MINUS)
+                    vmWriter.writeArithmetic(Command.NEG);
+                else
+                    vmWriter.writeArithmetic(Command.NOT);
 
-            break;
+                break;
             default:
                 ;
         }
@@ -334,13 +334,17 @@ public class Parser {
     }
 
     // ReturnStatement -> 'return' expression? ';'
+
     void parseReturn() {
         printNonTerminal("returnStatement");
         expectPeek(RETURN);
         if (!peekTokenIs(SEMICOLON)) {
             parseExpression();
+        } else {
+            vmWriter.writePush(Segment.CONST, 0);
         }
         expectPeek(SEMICOLON);
+        vmWriter.writeReturn();
 
         printNonTerminal("/returnStatement");
     }
