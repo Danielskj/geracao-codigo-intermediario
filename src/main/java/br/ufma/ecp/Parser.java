@@ -154,9 +154,15 @@ public class Parser {
                 break;
             case MINUS:
             case NOT:
-                expectPeek(MINUS, NOT);
-                parseTerm();
-                break;
+            expectPeek(MINUS, NOT);
+            var op = currentToken.type;
+            parseTerm();
+            if (op == MINUS)
+                vmWriter.writeArithmetic(Command.NEG);
+            else
+                vmWriter.writeArithmetic(Command.NOT);
+
+            break;
             default:
                 ;
         }
