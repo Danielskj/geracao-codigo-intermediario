@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "br.ufma.ecp.App",
+            "projectName": "jackcompiler",
+            "args": "\"C:\\Users\\carlo\\OneDrive\\Documentos\\geracao cod intermediario\\geracao-codigo-intermediario\\11\\Seven\""
+        }
+    ]
+}
