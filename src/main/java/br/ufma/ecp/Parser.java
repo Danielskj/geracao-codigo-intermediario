@@ -5,6 +5,7 @@ import br.ufma.ecp.token.TokenType;
 import static br.ufma.ecp.token.TokenType.*;
 
 import br.ufma.ecp.SymbolTable.Kind;
+import br.ufma.ecp.SymbolTable.Symbol;
 import br.ufma.ecp.VMWriter.Command;
 import br.ufma.ecp.VMWriter.Segment;
 
@@ -144,15 +145,20 @@ public class Parser {
                 expectPeek(THIS);
                 vmWriter.writePush(Segment.POINTER, 0);
                 break;
-            case IDENT:
-                expectPeek(IDENT);
-                if (peekTokenIs(LPAREN) || peekTokenIs(DOT)) {
+                case IDENT:
+                expectPeek(TokenType.IDENT);
+
+                Symbol sym = symbolTable.resolve(currentToken.lexeme);
+                
+                if (peekTokenIs(TokenType.LPAREN) || peekTokenIs(TokenType.DOT)) {
                     parseSubroutineCall();
-                } else { // variavel comum ou array
-                    if (peekTokenIs(LBRACKET)) { // array
-                        expectPeek(LBRACKET);
-                        parseExpression();
-                        expectPeek(RBRACKET);
+                } else { 
+                    if (peekTokenIs(TokenType.LBRACKET)) { 
+                        expectPeek(TokenType.LBRACKET);
+                        parseExpression();                        
+                        expectPeek(TokenType.RBRACKET);                       
+                    } else {
+                        vmWriter.writePush(kind2Segment(sym.kind()), sym.index());
                     }
                 }
                 break;
@@ -206,19 +212,35 @@ public class Parser {
 
     // letStatement -> 'let' identifier( '[' expression ']' )? '=' expression ';’
     void parseLet() {
-        printNonTerminal("letStatement");
-        expectPeek(LET);
-        expectPeek(IDENT);
 
-        if (peekTokenIs(LBRACKET)) {
-            expectPeek(LBRACKET);
-            parseExpression();
-            expectPeek(RBRACKET);
+        var isArray = false;
+
+        printNonTerminal("letStatement");
+        expectPeek(TokenType.LET);
+        expectPeek(TokenType.IDENT);
+
+        var symbol = symbolTable.resolve(currentToken.lexeme);
+
+        if (peekTokenIs(TokenType.LBRACKET)) {
+            expectPeek(TokenType.LBRACKET);
+            parseExpression();         
+            expectPeek(TokenType.RBRACKET);
+
+            isArray = true;
         }
 
-        expectPeek(EQ);
+        expectPeek(TokenType.EQ);
         parseExpression();
-        expectPeek(SEMICOLON);
+
+        if (isArray) {
+    
+
+        } else {
+            vmWriter.writePop(kind2Segment(symbol.kind()), symbol.index());
+        }
+
+
+        expectPeek(TokenType.SEMICOLON);
         printNonTerminal("/letStatement");
     }
 
@@ -546,6 +568,17 @@ public class Parser {
             return Command.AND;
         if (type == OR)
             return Command.OR;
+        return null;
+    }
+    private Segment kind2Segment(Kind kind) {
+        if (kind == Kind.STATIC)
+            return Segment.STATIC;
+        if (kind == Kind.FIELD)
+            return Segment.THIS;
+        if (kind == Kind.VAR)
+            return Segment.LOCAL;
+        if (kind == Kind.ARG)
+            return Segment.ARG;
         return null;
     }
 
